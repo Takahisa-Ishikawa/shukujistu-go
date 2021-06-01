@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
@@ -14,9 +16,16 @@ import (
 
 // import 省略
 
+type dateint struct {
+	Year  int
+	Month int
+	Day   int
+}
+
 // Entry は祝日1日分の情報を保持する構造体です
 type Entry struct {
 	YMD  string
+	Date dateint
 	Name string
 }
 
@@ -46,7 +55,15 @@ func AllEntries() ([]Entry, error) {
 		if len(row) != 2 {
 			return nil, fmt.Errorf("想定外のデータに遭遇しました：行 %d = %v", i+1, row)
 		}
-		entries = append(entries, Entry{YMD: row[0], Name: row[1]})
+		var d dateint
+		arr := strings.Split(row[0], "/")
+		if len(arr) != 3 {
+			return nil, fmt.Errorf("想定外の日付のフォーマットです：行 %d = %s", i+1, row[0])
+		}
+		d.Year, _ = strconv.Atoi(arr[0])
+		d.Month, _ = strconv.Atoi(arr[1])
+		d.Day, _ = strconv.Atoi(arr[2])
+		entries = append(entries, Entry{YMD: row[0], Name: row[1], Date: d})
 	}
 	return entries, nil
 }
